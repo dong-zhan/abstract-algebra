@@ -19,6 +19,7 @@ import util.arr as arr
 import util.tools as tools
 
 import math_zd.number as number
+from math_zd import modular
 
 
 # if np,pd,plt is needed for console, copy imp() function to console, then run imp() in console  --> plot.imp() doesn't work.
@@ -185,30 +186,22 @@ def print_Cayley_table(T, delimitor = ' '):
 def Z(start, N):
 	return np.arange(start,N,1)
 		
-def test_Carley_table2():
-	binary_operation = lambda x,y : (x*y) % 10
-	X = number.generate_exp_remainders(2, 4, 10)
+def test_Carley_table_pow(b, m, N):
+	"""
+	b: base
+	N: modulus
+	m: count
+	"""
+	binary_operation = lambda x,y : (x*y) % N
+	X = modular.modular_pow(b, N, m)
 	print(X)
 	X = generate_Cayley_table(X, binary_operation)
 	X = np.array(X)
 	print(X)
 	
-def test_Carley_table1():
-	binary_operation = lambda x,y : (x*y) % 10
-	X = [1, 3, 7, 9]
-	X = generate_Cayley_table(X, binary_operation)
-	X = np.array(X)
-	print(X)
-	
-def test_Carley_table(N):
-	binary_operation = lambda x,y : (x+y) % N
-	X = generate_Cayley_table(Z(N), binary_operation)
-	X = np.array(X)
-	print(X)
-	
-def test_find_all_inverses():
-	binary_operation = lambda x,y : (x*y) % 10
-	X = number.find_exp_remainders(2,4,10)
+def test_find_all_inverses(b, N):
+	binary_operation = lambda x,y : (x*y) % N
+	X = modular.modular_pow_no_repeat(b, N)
 	identity = find_identity(X, binary_operation)
 	IX = find_all_inverses(X, identity, binary_operation)	
 	return X, IX
@@ -223,7 +216,7 @@ def test_mul_mod_N(a, N):
 	binary_operation = lambda x,y : (x*y) % N
 	
 	#X = Z(1, N)
-	X = number.generate_exp_mod_N(a, N)
+	X = modular.modular_pow_no_repeat(a, N)
 	
 	T = generate_Cayley_table(X, binary_operation)
 	T = np.array(T)

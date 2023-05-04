@@ -15,7 +15,6 @@ def imp():
 	from array import array
 
 # copy rrr() to IDLE, run from there.
-# import util.arr as arr
 # import importlib
 def rrr():
 	importlib.reload(tools)

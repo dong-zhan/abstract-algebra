@@ -6,21 +6,31 @@
 
 from math import gcd as bltin_gcd
 from math import gcd
+from math_zd import modular
 import util.arr as arr
 import math
 
 def imp():
-	global bltin_gcd, gcd, math
+	global bltin_gcd, gcd, math, modular
+	from math_zd import modular
 	from math import gcd as bltin_gcd
 	from math import gcd
 	import math
 	
 # copy rrr() to IDLE, run from there.
-# import util.arr as arr
 # import importlib
 def rrr():
 	importlib.reload(number)
 	
+	
+def divide(a, b):
+	"""
+	check if a divides b
+	"""
+	c = b//a			# integer division, equivalent to the math. floor()
+	if c*a == b:
+		return True
+	return False
 	
 def Wheel_factorization(n):
 	"""
@@ -46,36 +56,36 @@ def Wheel_factorization(n):
 	
 	
 def coprime2(a, b):
-    return bltin_gcd(a, b) == 1
+	return bltin_gcd(a, b) == 1
 	
 # https://the-algorithms.com/algorithm/prime
 def is_prime(number: int) -> bool:
-    # precondition
-    assert isinstance(number, int) and (
-        number >= 0
-    ), "'number' must been an int and positive"
+	# precondition
+	assert isinstance(number, int) and (
+		number >= 0
+	), "'number' must been an int and positive"
 
-    if 1 < number < 4:
-        # 2 and 3 are primes
-        return True
-    elif number < 2 or not number % 2:
-        # Negatives, 0, 1 and all even numbers are not primes
-        return False
+	if 1 < number < 4:
+		# 2 and 3 are primes
+		return True
+	elif number < 2 or not number % 2:
+		# Negatives, 0, 1 and all even numbers are not primes
+		return False
 
-    odd_numbers = range(3, int(math.sqrt(number) + 1), 2)
-    return not any(not number % i for i in odd_numbers)
+	odd_numbers = range(3, int(math.sqrt(number) + 1), 2)
+	return not any(not number % i for i in odd_numbers)
 
 
 def next_prime(value, factor=1, **kwargs):
-    value = factor * value
-    first_value_val = value
+	value = factor * value
+	first_value_val = value
 
-    while not is_prime(value):
-        value += 1 if not ("desc" in kwargs and kwargs["desc"] is True) else -1
+	while not is_prime(value):
+		value += 1 if not ("desc" in kwargs and kwargs["desc"] is True) else -1
 
-    if value == first_value_val:
-        return next_prime(value + 1, **kwargs)
-    return value
+	if value == first_value_val:
+		return next_prime(value + 1, **kwargs)
+	return value
 	
 def find_all_divisors(n):
 	"""
@@ -101,101 +111,71 @@ def find_all_divisors(n):
 
 # https://stackoverflow.com/questions/32871539/integer-factorization-in-python	
 def prime_factorization___(n):
-    """
-    >>> prime_factorization(2*2*3*3*5*7*11)
-    [3, 3, 4, 7, 11, 5]
-    """
+	"""
+	>>> prime_factorization(2*2*3*3*5*7*11)
+	[3, 3, 4, 7, 11, 5]
+	"""
 	print("this function is buggy")
 	return
 	
-    factors = []
+	factors = []
 
-    def get_factor(n):
-        x_fixed = 2
-        cycle_size = 2
-        x = 2
-        factor = 1
+	def get_factor(n):
+		x_fixed = 2
+		cycle_size = 2
+		x = 2
+		factor = 1
 
-        while factor == 1:
-            for count in range(cycle_size):
-                if factor > 1: break
-                x = (x * x + 1) % n
-                factor = gcd(x - x_fixed, n)
+		while factor == 1:
+			for count in range(cycle_size):
+				if factor > 1: break
+				x = (x * x + 1) % n
+				factor = gcd(x - x_fixed, n)
 
-            cycle_size *= 2
-            x_fixed = x
+			cycle_size *= 2
+			x_fixed = x
 
-        return factor
+		return factor
 
-    while n > 1:
-        next = get_factor(n)
-        factors.append(next)
-        n //= next
+	while n > 1:
+		next = get_factor(n)
+		factors.append(next)
+		n //= next
 
-    return factors
+	return factors
 
 	
-def generate_exp_remainders(a, p, N):
-	"""
-	returns [a^1 % N, a^2 %N, ... a^p % N]
-	>>> find_exp_remainders(2,4,10)
-	[2,4,8,6]
-	"""
-	X = arr.array1(p)
-	r = a % N
-	X[0] = r
-	p_1 = p-1
-	for i in range(p_1):
-		r1 = (r * a) % N
-		r = r1
-		X[i+1] = r
-	return X
-	
-def generate_exp_mod_N(a, N):
-	"""
-	generate powers of a mod N, stop when remainder has been generated.
-	"""
-	r = a % N
-	X = [r]
-	while True:
-		r1 = (r * a) % N
-		r = r1
-		if r in X:
-			break
-		X.append(r)
-	return X	
-
 # https://github.com/TheAlgorithms/Python/blob/master/blockchain/chinese_remainder_theorem.py
 # Extended Euclid
 def extended_euclid(a: int, b: int) -> tuple[int, int]:
-    """
-    >>> extended_euclid(10, 6)
-    (-1, 2)
-    >>> extended_euclid(7, 5)
-    (-2, 3)
-    """
-    if b == 0:
-        return (1, 0)
-    (x, y) = extended_euclid(b, a % b)
-    k = a // b
-    return (y, x - k * y)
+	"""
+	>>> extended_euclid(10, 6)
+	(-1, 2)
+	>>> extended_euclid(7, 5)
+	(-2, 3)
+	"""
+	if b == 0:
+		return (1, 0)
+	(x, y) = extended_euclid(b, a % b)
+	k = a // b
+	return (y, x - k * y)
 
 
 # Uses ExtendedEuclid to find inverses
 def chinese_remainder_theorem(n1: int, r1: int, n2: int, r2: int) -> int:
-    """
-    >>> chinese_remainder_theorem(5,1,7,3)
-    31
-    Explanation : 31 is the smallest number such that
-                (i)  When we divide it by 5, we get remainder 1
-                (ii) When we divide it by 7, we get remainder 3
-    >>> chinese_remainder_theorem(6,1,4,3)
-    14
-    """
-    (x, y) = extended_euclid(n1, n2)
-    m = n1 * n2
-    n = r2 * x * n1 + r1 * y * n2
-    return (n % m + m) % m
+	"""
+	>>> chinese_remainder_theorem(5,1,7,3)
+	31
+	Explanation : 31 is the smallest number such that
+				(i)  When we divide it by 5, we get remainder 1
+				(ii) When we divide it by 7, we get remainder 3
+	>>> chinese_remainder_theorem(6,1,4,3)
+	14
+	"""
+	(x, y) = extended_euclid(n1, n2)
+	m = n1 * n2
+	n = r2 * x * n1 + r1 * y * n2
+	return (n % m + m) % m
 
 
 # ----------SAME SOLUTION USING InvertModulo instead ExtendedEuclid----------------
@@ -203,27 +183,27 @@ def chinese_remainder_theorem(n1: int, r1: int, n2: int, r2: int) -> int:
 
 # This function find the inverses of a i.e., a^(-1)
 def invert_modulo(a: int, n: int) -> int:
-    """
-    >>> invert_modulo(2, 5)
-    3
-    >>> invert_modulo(8,7)
-    1
-    """
-    (b, x) = extended_euclid(a, n)
-    if b < 0:
-        b = (b % n + n) % n
-    return b
+	"""
+	>>> invert_modulo(2, 5)
+	3
+	>>> invert_modulo(8,7)
+	1
+	"""
+	(b, x) = extended_euclid(a, n)
+	if b < 0:
+		b = (b % n + n) % n
+	return b
 
 
 # Same a above using InvertingModulo
 def chinese_remainder_theorem2(n1: int, r1: int, n2: int, r2: int) -> int:
-    """
-    >>> chinese_remainder_theorem2(5,1,7,3)
-    31
-    >>> chinese_remainder_theorem2(6,1,4,3)
-    14
-    """
-    x, y = invert_modulo(n1, n2), invert_modulo(n2, n1)
-    m = n1 * n2
-    n = r2 * x * n1 + r1 * y * n2
-    return (n % m + m) % m
+	"""
+	>>> chinese_remainder_theorem2(5,1,7,3)
+	31
+	>>> chinese_remainder_theorem2(6,1,4,3)
+	14
+	"""
+	x, y = invert_modulo(n1, n2), invert_modulo(n2, n1)
+	m = n1 * n2
+	n = r2 * x * n1 + r1 * y * n2
+	return (n % m + m) % m

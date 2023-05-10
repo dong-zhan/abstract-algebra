@@ -18,13 +18,16 @@ import matplotlib.pyplot as plt
 import util.arr as arr
 import util.tools as tools
 
+import random
+
 import math_zd.number as number
 from math_zd import modular
+import math_zd.perm as perm
 
 
 # if np,pd,plt is needed for console, copy imp() function to console, then run imp() in console  --> plot.imp() doesn't work.
 def imp():
-	global np, pd, plt, arr, tools, number, modular
+	global np, pd, plt, arr, tools, number, modular, perm
 	import numpy as np
 	import pandas as pd
 	import matplotlib.pyplot as plt
@@ -34,6 +37,7 @@ def imp():
 
 	import math_zd.number as number
 	from math_zd import modular
+	import math_zd.perm as perm
 
 def replace_readme_MD():
 	tools.replace_line_break_with_br('F:/Python/zd/abs_alg/README.txt', 'F:/Python/zd/abs_alg/README.md')
@@ -72,6 +76,24 @@ def C(g, N):
 	if additive, then it's Zn too.
 	"""
 	return modular.modular_pow_no_repeat(g, N)
+	
+def S(N, toCycles = True):
+	"""
+	Sn: symmetric group, The group of all permutations
+	Sym(M): where M = {1, 2, ..., n}
+	binary_operation = lambda x,y : multiply_cycles([x], [y])
+	"""
+	X = [ i+1 for i in range(N)]
+	P = perm.perm(X)
+	if toCycles:
+		C = arr.array1(len(P))
+		idx = 0
+		for p in P:
+			C[idx] = permutation_to_cycles(p)
+			idx += 1
+		return C
+	return P
+	
 	
 def order_of_element(g, G, e, binary_operation):
 	"""
@@ -253,6 +275,26 @@ def is_closed(X, binary_operation):
 				return False
 	return True
 	
+def is_normal_subgroup(N, G, binary_operation):
+	"""
+	N is normal if it's invariant under conjugation, that is, the conjugation of an element of N by an element of G is always in N
+	is conjugation g⁻¹ng or gng⁻¹?
+	N is normal if gNg⁻¹ = N for all g ∈ G
+	all subgroups of Abelian groups are normal
+	https://math.stackexchange.com/questions/234825/what-exactly-does-conjugation-mean
+	"""
+	e = find_identity(G, binary_operation)
+
+	for n in N:
+		for g in G:
+			ig = find_inverse(g, G, e, binary_operation)
+			# compute gng⁻¹  (conjugate)
+			n1 = binary_operation(g, n)
+			n2 = binary_operation(n1, ig)
+			if not n2 in N:
+				return False
+	return True	
+	
 def generate_additive_mod_N(N):
 	"""
 	The Additive Group of Integers Modulo n is the group with domain {0,1,2,…,n−1} and with the operation of mod n addition. It is denoted as Zn.
@@ -268,6 +310,46 @@ def generate_multipicative_mod_N(N):
 def generate_cyclic_mod_N(a, N):
 	return modular.modular_pow_no_repeat(a, N)
 	
+	
+########################################################################################################################
+#
+#						permutation / cycles
+#
+########################################################################################################################
+	
+def next_element_in_cycle(X, x):
+	"""
+	C = [1,4,3,2]
+	next_element_in_cycle(C, 4)
+	"""
+	if x in X:
+		i = X.index(x)
+		i = (i+1) % len(X)
+		return X[i]
+		
+def next_element_in_cycle_arrary(X, a):
+	"""
+	T = [[1,2],[1,3],[1,4]]
+	next_element_in_cycle_arrary(T,4)
+	"""
+	lenX = len(X)
+	b = a
+	for i in reversed(range(lenX)):
+		x = X[i]
+		b1 = next_element_in_cycle(x, b)
+		if b1 != None:
+			b = b1
+	return b
+
+def next_element_in_cycle_arrary2(X1, X2, x):
+	n = next_element_in_cycle_arrary(X2, x)
+	if n == None:
+		n = x
+	n2 = next_element_in_cycle_arrary(X1, n)
+	if n2 != None:
+		n = n2
+	return n
+
 def permutation_to_cycles(P):
 	"""
 	P: permutation --> list, all elements must be in it, and must be from 1 to len(P), like the one in example
@@ -304,41 +386,90 @@ def permutation_to_cycles(P):
 
 	return C		
 	
-def next_element_in_cycle(X, x):
-	"""
-	C = [1,4,3,2]
-	next_element_in_cycle(C, 4)
-	"""
-	if x in X:
-		i = X.index(x)
-		i = (i+1) % len(X)
-		return X[i]
-		
-def next_element_in_cycle2_deprecated(X1, X2, x):
-	n = next_element_in_cycle(X2, x)
-	if n == None:
-		n = x
-	n2 = next_element_in_cycle(X1, n)
-	if n2 != None:
-		n = n2
-	return n
+def max_number_in_list_array_2D(C):
+	m = C[0][0]
+	for c in C:
+		m = max(m, max(c))
+	return m
 	
-def next_element_in_cycle_arrary(X, a):
+def cycles_to_permutation(C, maxIndex = None):
 	"""
-	T = [[1,2],[1,3],[1,4]]
-	next_element_in_cycle_arrary(T,4)
+	C = [[1, 3, 6], [2, 5]]
+	cycles_to_permutation(C, 6)
+	[3, 5, 6, 4, 2, 1]
 	"""
-	lenX = len(X)
-	b = a
-	for i in reversed(range(lenX)):
-		x = X[i]
-		b1 = next_element_in_cycle(x, b)
-		if b1 != None:
-			b = b1
-	return b
-		
+	if maxIndex == None:
+		maxIndex = max_number_in_list_array_2D(C)
+	P = []
+	for i in range(maxIndex):
+		n = next_element_in_cycle_arrary(C, i+1)
+		if n == None:
+			n = i+1
+		P.append(n)
+	return P
+	
+def invert_permutation(P):
+	X = P.copy()		# X = P[:]		# are they the same?
+	X.reverse()
+	return X
+	
+def invert_cycles(C, maxIndex):
+	P = cycles_to_permutation(C, maxIndex)
+	#tools.printf("cycles_to_permutation: %s\n", P)
+	P = invert_permutation(P)
+	#tools.printf("invert_permutation: %s\n", P)
+	return permutation_to_cycles(P)
+	
+def list_array_to_list(C):
+	P = []
+	for c in C:
+		P = P + c
+	return P
 
-def multiply_cycles(a, b):
+def multiply_cycles(C1, C2):
+	"""
+	a = [1,3]
+	b = [1,2, 3]
+	c = [1,3]
+	C1 = [a,b]
+	C2 = [c]
+	C = multiply_cycles(C1, C2)
+	print(C)
+	"""
+	# join two lists
+	
+	R = list(set( list_array_to_list(C1 + C2) ))
+	C = []		# cycles list
+	
+	def scratch_off_by_idx(X, idx):
+		c = X[idx]
+		X.remove(c)
+		return c
+
+	while len(R)>0:
+		e = scratch_off_by_idx(R, 0)
+		n = e
+		c = [e]		# c is a single cycle
+		
+		# form a cycle starting e, result in c
+		while True:
+			#n = next_element_in_cycle2(a, b, n)
+			n = next_element_in_cycle_arrary2(C1, C2, n)
+			if n == None:
+				break
+			if n == e:
+				break
+			R.remove(n)
+			c.append(n)
+			
+		if len(c) > 1:
+			#c.sort()
+			C.append(c)
+
+	return C			
+	
+	
+def multiply_cycles_deprecated(a, b):
 	"""
 	>>> a=[1,3,5,2]
 	>>> b =[2,5,6]
@@ -379,40 +510,14 @@ def multiply_cycles(a, b):
 			C.append(c)
 
 	return C		
+	
 		
-	
-	
-def print_mod_group_info(X, binary_operation, N):
-	T = generate_Cayley_table(X, binary_operation)
-	T = np.array(T)
-	
-	tools.printf("Mod: %d\nSet: ", N)
-	print(X)
-	
-	print("Cayley table")
-	
-	PT = generate_printable_Cayley_table(T, X)
-	print_Cayley_table(PT)
-	
-	ia = is_associative(X, binary_operation)
-	tools.printf("is_associative = %s\n", ia)
-	
-	identity = find_identity(X, binary_operation)
-	#tools.printf("identity = %s\n", str(identity))
-	
-	INV = count_inverse(X, identity, binary_operation)
-	cols = len(X)
-	uniqueIdentity = True
-	cnt = INV.count(1)
-	if cnt != cols:
-		uniqueIdentity = False
-	
-	tools.printf("unique identity: (%s) %s\n", identity, uniqueIdentity)	
-	
-	tools.printf("is_closed: %s\n", is_closed(X, binary_operation))
-	
-	tools.printf("Latin square property: %s\n", has_Latin_Square_Property(T.tolist()))	
-	
+########################################################################################################################
+#
+#						Cayley Table
+#
+########################################################################################################################
+
 def generate_Cayley_table(X, binary_operation):
 	"""
 	X is a set
@@ -456,6 +561,22 @@ def print_Cayley_table(T, delimitor = ' '):
 	"""
 	T is printable Cayley table (Cayley table dimension extended by 1 for extra first row and first column)
 	"""
+	
+	#print(T)
+	#return
+	
+	#pd.set_option('display.max_rows', 500)
+	pd.set_option('display.max_columns', len(T))
+	pd.set_option('display.width', 1000)	
+	
+	df = pd.DataFrame(T)
+	print(df)
+
+	#df = pd.DataFrame(table, columns = ['a', 'b', 'c', 'd'], index=['row_1', 'row_2'])
+	#print(df)
+
+	return
+	
 	rows = len(T) + 1
 	cols = len(T[0]) + 1
 	
@@ -465,9 +586,128 @@ def print_Cayley_table(T, delimitor = ' '):
 			if irow == 0 and icol == 0:
 				tools.printf("X%c", delimitor)
 			else:
-				tools.printf("%d%c", t, delimitor)
+				tools.printf("%s%c", t, delimitor)
 		tools.printf("\n")
-			
+	
+########################################################################################################################
+#
+#						helpers / information
+#
+########################################################################################################################
+	
+def print_symmetric_group_info(X, binary_operation):
+	T = generate_Cayley_table(X, binary_operation)
+	T = np.array(T)
+	
+	
+	print("Cayley table")
+	
+	PT = generate_printable_Cayley_table(T, X)
+	PT = np.array(PT, dtype=object)
+	
+	# convert empty set in PT into [[]], to avoid warning from pandas "different lengths or shapes"
+	if 0:
+		empty_element = []
+		for irow, row in enumerate(PT):
+			for icol, col in enumerate(row):
+				if len(col) == 0:
+					empty_element.append([irow, icol])
+					
+		for e in empty_element:
+			PT[e[0]][e[1]] = [[]]
+		
+	print_Cayley_table(PT)
+
+	#return PT
+	
+def print_mod_group_info(X, binary_operation, N):
+	T = generate_Cayley_table(X, binary_operation)
+	T = np.array(T)
+	
+	tools.printf("Mod: %d\nSet: ", N)
+	print(X)
+	
+	print("Cayley table")
+	
+	PT = generate_printable_Cayley_table(T, X)
+	print_Cayley_table(PT)
+	
+	ia = is_associative(X, binary_operation)
+	tools.printf("is_associative = %s\n", ia)
+	
+	identity = find_identity(X, binary_operation)
+	#tools.printf("identity = %s\n", str(identity))
+	
+	INV = count_inverse(X, identity, binary_operation)
+	cols = len(X)
+	uniqueIdentity = True
+	cnt = INV.count(1)
+	if cnt != cols:
+		uniqueIdentity = False
+	
+	tools.printf("unique identity: (%s) %s\n", identity, uniqueIdentity)	
+	
+	tools.printf("is_closed: %s\n", is_closed(X, binary_operation))
+	
+	tools.printf("Latin square property: %s\n", has_Latin_Square_Property(T.tolist()))	
+	
+	
+########################################################################################################################
+#
+#			random testing for correctness, don't remove this, this ensures the software can run correctly.
+#
+########################################################################################################################	
+
+def random_transpositions(N, cnt):	
+	"""
+	cnt: number of transpositions
+	cnt should be at most N-1, because (a, a) is not a cycle.
+	"""
+	X = []
+	for i in range(cnt):
+		n1 = random.randint(1, N)
+		n2 = n1
+		#while True:
+		for j in range(100):
+			n2 = random.randint(1, N)
+			if n1 != n2 and not [n1,n2] in X and not [n2,n1] in X:
+				break
+		
+		if [n1,n2] in X or [n2,n1] in X:
+			print("ERROR")
+			print([n1, n2], X)
+			print("ERROR")
+		
+		X.append([n1, n2])
+	return X
+	
+	
+def test_multiply_cycles(N, n, show_result = False):
+	for i in range(N):
+		A = random_transpositions(n, n-1)
+		B = random_transpositions(n, n-1)
+		C = multiply_cycles(A, B)	 
+		if len(C) == 0:
+			continue
+		IC = invert_cycles(C, n)
+		if len(IC) == 0:
+			continue
+		IIC = invert_cycles(IC, n)
+		
+		if show_result:
+			tools.printf("%s\n%s\n%s\n%s\n%s\n\n", A, B, C, IC, IIC)
+		
+		if C != IIC:
+			print("ERROR")
+			print(C, IIC)	
+			print("ERROR")
+			break
+
+########################################################################################################################
+#
+#						basic function test
+#
+########################################################################################################################			
 	
 	
 def test_Carley_table_pow(b, m, N):
@@ -517,6 +757,14 @@ def test_U(N):
 	
 	print_mod_group_info(X, binary_operation, N)	
 	
+def test_Sn(N):
+	G = S(N)
+	tools.printf("S(%d): %s\n", N, G)
+	binary_operation = lambda x,y : multiply_cycles(x, y)
+	
+	print_symmetric_group_info(G, binary_operation)	
+	
+	
 def test_additive_subgroup(N):
 	"""
 	Group: Zn+
@@ -531,25 +779,7 @@ def test_additive_subgroup(N):
 		print(C)
 	
 	
-def is_normal_subgroup(N, G, binary_operation):
-	"""
-	N is normal if it's invariant under conjugation, that is, the conjugation of an element of N by an element of G is always in N
-	is conjugation g⁻¹ng or gng⁻¹?
-	N is normal if gNg⁻¹ = N for all g ∈ G
-	all subgroups of Abelian groups are normal
-	https://math.stackexchange.com/questions/234825/what-exactly-does-conjugation-mean
-	"""
-	e = find_identity(G, binary_operation)
 
-	for n in N:
-		for g in G:
-			ig = find_inverse(g, G, e, binary_operation)
-			# compute gng⁻¹  (conjugate)
-			n1 = binary_operation(g, n)
-			n2 = binary_operation(n1, ig)
-			if not n2 in N:
-				return False
-	return True
 			
 	
 def test_Un(N):
@@ -570,7 +800,8 @@ def test_Un(N):
 		C = subgroup_cyclic(g, binary_operation)
 		tools.printf("<%d>", g)
 		print(C)	
-	
+		
+
 def test_additive_coset(N, h, G):
 	"""
 	Group: Z12+
@@ -642,12 +873,22 @@ def test_orbit():
 	tools.printf("<%d>", h)
 	print(H)
 
+	S = []
 	hs = [3,5,7,11,15]
+	S.append(hs)
 	for h in hs:
 		aH = coset_left(h, H, binary_operation)
-		tools.printf("<%d>", h)
-		print(aH)
+		S.append(aH)
+		#tools.printf("<%d>", h)
+		#print(aH)
+		
+	print(np.array(S))
+	
+	
 
-
+	
+	
+	
 def find_subgroup(order):
 	pass
+	
